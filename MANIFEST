@@ -1,0 +1,9 @@
+MANIFEST
+Makefile.PL
+Tcl.pm
+Tcl.pod
+Tcl.xs
+mydebug.h
+README
+t/aaa.t
+t/bbb.t
