@@ -7,3 +7,5 @@ mydebug.h
 README
 t/aaa.t
 t/bbb.t
+t/a1.pl
+test.sh

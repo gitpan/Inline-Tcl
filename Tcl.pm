@@ -8,7 +8,7 @@ require Exporter;
 
 use vars qw(@ISA $VERSION @EXPORT_OK);
 @ISA = qw(Inline DynaLoader Exporter);
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 @EXPORT_OK = qw(eval_tcl);
 
@@ -153,7 +153,7 @@ sub info {
 ###########################################################################
 sub build {
     my $o = shift;
-#    return if $o->{Tcl}{built};
+    return if $o->{Tcl}{built};
     #print "Build\n";
     #print "SEP: (@{$o->{Tcl}{PRIVATE_PREFIXES}})\n";
     my $result = _eval_tcl($o->{code});
@@ -161,7 +161,6 @@ sub build {
       unless $result;
 
     my %namespace = _Inline_parse_tcl_namespace();
-#    my %namespace = {};
 
     my @filtered;
     for my $func (@{$namespace{functions}}) {
@@ -175,7 +174,6 @@ sub build {
     }
     $namespace{functions} = \@filtered;
 
-    #print "@{$namespace{functions}}\n";
     warn "No functions or classes found!"
       unless ((length @{$namespace{functions}}) > 0 );
 

@@ -19,6 +19,7 @@ my @py_libs =
    '/usr/lib/libtcl8.3.so',
    '/usr/local/lib/libtcl8.3.a',
    '/usr/local/lib/libtcl8.3.so',
+   '/usr/tcl84/lib/libtcl8.4.so',
   );
 
 #============================================================================
@@ -28,16 +29,9 @@ my @py_incs =
   (
    '/usr/local/include/',
    '/usr/include/',
+   '/usr/tcl84/include',
   );
   
-my @py_dists = 
-  (
-   '$ENV{HOME}/tcl8.3.2',
-   '$ENV{HOME}/tcl8.3.1',
-  );  
-  
-  
-
 #============================================================================
 # Search for libraries
 #============================================================================
@@ -53,19 +47,6 @@ my @py_incs_found;
 for my $loc (@py_incs) {
     push(@py_incs_found, $loc) if -d $loc;
 }
-
-#============================================================================
-# Search for distribution directories
-#============================================================================
-my @py_dists_found;
-for my $loc (@py_dists) {
-    push(@py_dists_found, $loc) if -d $loc;
-}
-@possible = glob("$ENV{HOME}/tcl*");
-for my $loc (@possible) {
-    push(@py_dists_found, $loc) if -d $loc;
-}
-
 
 #============================================================================
 # Prompt for library to use
@@ -91,60 +72,28 @@ $inc = prompt ("Please enter the TCL include directory.", "")
 
 $inc = $py_incs_found[$inc-1] if $inc =~ /^\d+$/;
 
-#============================================================================
-# Prompt for distribution directory to use
-#============================================================================
-$num = 1;
-my $dist = prompt(join("\n",("Found the following TCL distributions: ",
-			    map {$num++ . ". $_"} @py_dists_found))."\nUse? (or enter alternative)",
-		 "1") if @py_dists_found;
-$dist = prompt ("Please enter the TCL distribution directory.", "")
-  unless @py_dists_found;
 
-$dist = $py_dists_found[$dist-1] if $dist =~ /^\d+$/;
-
-
-
-#============================================================================
-# Does  have Tkinter installed?
-#============================================================================
-#my $tkinter = prompt("Does this Python have Tkinter installed? Hint: run \"python -c 'import Tkinter'\" and watch for error messages.", "no") eq "yes";
-
-#============================================================================
-# Linker hints
-#============================================================================
-my %hints =
-  (
-   'python2.0' => ['-lpython2.0',
-		   '-ldb -lutil', # seems to always be required for 2.0
-		   $version < 5.6 ? "-lpthread":"",
-		   $tkinter ? "-ltcl -ltk -ltix":"",
-		  ],
-   'python1.6' => ['-lpython1.6',
-		   $tkinter ? "-ltcl -ltk -ltix":"",
-		  ],
-   'python1.5' => ['-lpython1.5',
-		   $tkinter ? "-ltcl -ltk -ltix":"",
-		  ],
-  );
-
-my $pyver;
-for my $py (keys %hints) {
-    $pyver ||= (($lib =~ m|$py|i) ? $py : 0);
-}
-
-#my $libs = join " ", @{$hints{$pyver}};
-my $libs = join " ", "-ltcl8.4";
-
-#============================================================================
-# Write the makefile
-#============================================================================
 my $lib_path = substr($lib,0,rindex($lib,'/'));
 my $lib = substr($lib,rindex($lib,'/lib')+4);
 $lib = substr($lib,0,rindex($lib,'.'));
 
+
+#============================================================================
+# Linker hints
+#============================================================================
+
+print "Tcl include path =  $inc\n";
+print "Tcl library path =  $lib_path\n";
+print "Tcl link options =  -l$lib\n";
+
+my $libs = join " ", "-l$lib";
+
+#============================================================================
+# Write the makefile
+#============================================================================
+
 WriteMakefile(
-	      INC => "-I$inc -I$dist/generic",
+	      INC => "-I$inc",
 	      LIBS => "-L$lib_path $libs",
 	      NAME => 'Inline::Tcl',
 	      VERSION_FROM => 'Tcl.pm',

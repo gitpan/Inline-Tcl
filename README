@@ -28,7 +28,7 @@ INSTALLATION:
 
 This module requires Inline.pm version 0.30 or higher to be installed.
 
-To install Inline::Python do this:
+To install Inline::Tcl do this:
 
 perl Makefile.PL
 make

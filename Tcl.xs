@@ -20,16 +20,11 @@ static STRLEN n_a;
 #define SvPV_nolen(x) SvPV(x,n_a)
 #endif
 
-#include "tclInt.h"
-#include "tclPort.h"
-#include "tclCompile.h"
-#include "tclRegexp.h"
-
 /****************************
  * SV* Tcl2Pl(Tcl_Obj *obj) 
  * 
- * Converts arbitrary Python data structures to Perl data structures
- * Note on references: does not Py_DECREF(obj).
+ * Converts Tcl Objects to Perl data structures
+ * 
  ****************************/
 SV* Tcl2Pl (char *result, char *perl_class) {
    /* Here is how it does it:
@@ -48,7 +43,7 @@ SV* Tcl2Pl (char *result, char *perl_class) {
 /****************************
  * Tcl_Obj* Pl2Py(SV *obj)
  * 
- * Converts arbitrary Perl data structures to Python data structures
+ * Converts a Perl data structures to a Tcl Object
  ****************************/
 char *Pl2Tcl (SV *obj) {
    Tcl_Obj *o;
@@ -69,76 +64,44 @@ PROTOTYPES: DISABLE
 void 
 _Inline_parse_tcl_namespace()
  PREINIT:
-    char *cmdName, *pattern, *simplePattern;
-    register Tcl_HashEntry *entryPtr;
-    Tcl_HashSearch search;
     Tcl_Obj *listPtr, *elemObjPtr;
-    Namespace *nsPtr;
-    Namespace *globalNsPtr = (Namespace *) Tcl_GetGlobalNamespace(interp);
-    Namespace *currNsPtr   = (Namespace *) Tcl_GetCurrentNamespace(interp);
-    int specificNsInPattern = 0;  /* Init. to avoid compiler warning. */
-    Tcl_Command cmd;
+    Tcl_Obj **objvPtr;
+    char *result;
+    int objc,i;
+    int status;
     AV* functions = newAV();
  PPCODE:
     /*
      * Get the pattern and find the "effective namespace" in which to
      * list commands.
      */
-    simplePattern = NULL;
-    nsPtr = currNsPtr;
-    specificNsInPattern = 0;
 
-    /*
-     * Scan through the effective namespace's command table and create a
-     * list with all commands that match the pattern. If a specific
-     * namespace was requested in the pattern, qualify the command names
-     * with the namespace name.
-     */
-
-    listPtr = Tcl_NewListObj(0, (Tcl_Obj **) NULL);
-    if (nsPtr != NULL) {
-        entryPtr = Tcl_FirstHashEntry(&nsPtr->cmdTable, &search);
-        while (entryPtr != NULL) {
-            cmdName = Tcl_GetHashKey(&nsPtr->cmdTable, entryPtr);
-            if ((simplePattern == NULL)
-                    || Tcl_StringMatch(cmdName, simplePattern)) {
-                if (specificNsInPattern) {
-                    cmd = (Tcl_Command) Tcl_GetHashValue(entryPtr);
-                    elemObjPtr = Tcl_NewObj();
-                    Tcl_GetCommandFullName(interp, cmd, elemObjPtr);
-                } else {
-                    elemObjPtr = Tcl_NewStringObj(cmdName, -1);
-		    PDEBUGG("CMD: %s\n", cmdName);
-		    av_push(functions, newSVpv(cmdName,0));
-                }
-                Tcl_ListObjAppendElement(interp, listPtr, elemObjPtr);
-            }
-            entryPtr = Tcl_NextHashEntry(&search);
-        }
-        
-	/*
-         * If the effective namespace isn't the global :: namespace, and a
-         * specific namespace wasn't requested in the pattern, then add in
-         * all global :: commands that match the simple pattern. Of course,
-         * we add in only those commands that aren't hidden by a command in
-         * the effective namespace.
-         */
-
-        /* if ((nsPtr != globalNsPtr) && !specificNsInPattern) {
-            entryPtr = Tcl_FirstHashEntry(&globalNsPtr->cmdTable, &search);
-            while (entryPtr != NULL) {
-                cmdName = Tcl_GetHashKey(&globalNsPtr->cmdTable, entryPtr);
-                if ((simplePattern == NULL)
-                        || Tcl_StringMatch(cmdName, simplePattern)) {
-                    if (Tcl_FindHashEntry(&nsPtr->cmdTable, cmdName) == NULL) {
-                        Tcl_ListObjAppendElement(interp, listPtr,
-                                Tcl_NewStringObj(cmdName, -1));
-                    }
-                }
-                entryPtr = Tcl_NextHashEntry(&search);
-            }
-        }*/
+    if (TCL_ERROR == Tcl_Eval(interp, "info commands") ) {
+	PERROR("Namespace: Eval Error\n");
     }
+
+    listPtr = Tcl_GetObjResult(interp);
+    /* error check ? */
+
+    if (TCL_ERROR == Tcl_ListObjGetElements(interp, listPtr, &objc, &objvPtr)){
+	PERROR("Namespace: List error\n");
+    }
+
+    if (TCL_ERROR == Tcl_ListObjLength(interp, listPtr, &objc) ) {
+	PERROR("Namespace: List Length error\n");
+    }
+
+    PDEBUGG("OBJ %d\n", objc);
+
+    for (i=0;i<objc;i++) {
+	if (TCL_ERROR == Tcl_ListObjIndex(interp, listPtr, i, &elemObjPtr)){
+	    PERROR("Namespace: List Length error\n");
+        }
+	result = Tcl_GetString(elemObjPtr); /* error check ? */
+	PDEBUGG("RESULT = %s\n", result);
+        av_push(functions, newSVpv(result,0));
+    }
+
     PUSHs(newSVpv("functions",0));
     PUSHs(newRV_noinc((SV*)functions));
 
