@@ -8,7 +8,7 @@ require Exporter;
 
 use vars qw(@ISA $VERSION @EXPORT_OK);
 @ISA = qw(Inline DynaLoader Exporter);
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 @EXPORT_OK = qw(eval_tcl);
 
@@ -174,7 +174,7 @@ sub build {
     }
     $namespace{functions} = \@filtered;
 
-    warn "No functions or classes found!"
+    warn "No functions found!"
       unless ((length @{$namespace{functions}}) > 0 );
 
     require Data::Dumper;

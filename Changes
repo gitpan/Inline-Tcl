@@ -1,0 +1,15 @@
+0.03:  First public release
+
+0.04:  Fixed dependency on gcc, but still doesn't compile on some systems
+       Fixed dependency on tcl distribution, now uses top level API
+       Tested on Linux
+       
+0.05:  Removed all dependency on variable parameter function macros from gcc
+       Added "Changes" file
+       Removed gcc style comments
+       Searches for FreeBSD paths for libraries
+       Added library compile options for sun-solaris cc compiler (-R...)
+       Checks in include paths for valid tcl headers
+       Tested on FreeBSD and Linux
+       
+       

@@ -14,12 +14,12 @@ $version = $Config{version};
 my @py_libs = 
   (
    '/usr/local/lib/libtcl8.4.so',
-   '/usr/local/lib/libtcl8.4.a',
-   '/usr/lib/libtcl8.3.a',
    '/usr/lib/libtcl8.3.so',
-   '/usr/local/lib/libtcl8.3.a',
    '/usr/local/lib/libtcl8.3.so',
    '/usr/tcl84/lib/libtcl8.4.so',
+   '/usr/tcl83/lib/libtcl8.3.so',
+   '/usr/local/lib/libtcl83.so',
+   '/usr/local/lib/libtcl84.so',
   );
 
 #============================================================================
@@ -27,9 +27,12 @@ my @py_libs =
 #============================================================================
 my @py_incs = 
   (
+   '/usr/tcl84/include/',
+   '/usr/tcl83/include/',
+   '/usr/local/include/tcl8.3/',
+   '/usr/local/include/tcl8.4/',
    '/usr/local/include/',
    '/usr/include/',
-   '/usr/tcl84/include',
   );
   
 #============================================================================
@@ -45,7 +48,8 @@ for my $loc (@py_libs) {
 #============================================================================
 my @py_incs_found;
 for my $loc (@py_incs) {
-    push(@py_incs_found, $loc) if -d $loc;
+#    push(@py_incs_found, $loc) if -d $loc;
+    push(@py_incs_found, $loc) if -f $loc."tcl.h";
 }
 
 #============================================================================
@@ -82,19 +86,24 @@ $lib = substr($lib,0,rindex($lib,'.'));
 # Linker hints
 #============================================================================
 
-print "Tcl include path =  $inc\n";
-print "Tcl library path =  $lib_path\n";
-print "Tcl link options =  -l$lib\n";
-
 my $libs = join " ", "-l$lib";
+my $path_str = "-L$lib_path";
+$path_str = ($path_str . "-R$lib_path") if $^O != "linux";
+
+print "Platform = $^O\n";
+print "Tcl include path = $inc\n";
+print "Tcl library path = $lib_path\n";
+print "Tcl include options = -Wall -l$lib\n";
+print "Tcl link options = $path_str -l$lib\n";
+
 
 #============================================================================
 # Write the makefile
 #============================================================================
 
 WriteMakefile(
-	      INC => "-I$inc",
-	      LIBS => "-L$lib_path $libs",
+	      INC => "-Wall \$(DEBUG) -I$inc",
+	      LIBS => "-L$lib_path -R$lib_path $libs",
 	      NAME => 'Inline::Tcl',
 	      VERSION_FROM => 'Tcl.pm',
 	      PREREQ_PM => {

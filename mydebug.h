@@ -3,36 +3,27 @@
 
 #include <stdio.h>
 
-#ifdef __GCC__
+#ifdef MYDEBUG
 
 #ifndef PDEBUG
-#  define PDEBUG(fmt, args...); fprintf(stderr,"MSG $%s$ Line %d: ",__FILE__,__LINE__); fprintf(stderr,fmt, ## args ); fflush(NULL);
+#  define PDEBUG printf("MSG $%s$ Line %d: ",__FILE__,__LINE__); fflush(NULL); printf
 #endif
 
 #ifndef PERROR
-#define PERROR(fmt, args...); fprintf(stderr,"ERROR $%s$ Line %d: ",__FILE__,__LINE__); fprintf(stderr,fmt, ## args ); fflush(NULL);
+#  define PERROR printf("ERR $%s$ Line %d: ",__FILE__,__LINE__); fflush(NULL); printf
 #endif
 
 #ifndef PDEBUGG
-#  define PDEBUGG(fmt, args...); 
-#endif
+#  define PDEBUGG(...); { }
+# endif
 
 #else
-
-#ifndef PDEBUG
-#define PDEBUG printf
-#endif
-
-#ifndef PERROR
-#define PERROR printf
-#endif
-
-#ifndef PDEBUGG
-#define PDEBUGG(fmt, args...) { }
-#endif
+#include <perl.h>
+#  define PDEBUG(...); { }
+#  define PERROR(...); { assert(0); }
+#  define PDEBUGG(...); { }
 
 #endif
-
 
 #endif
 
