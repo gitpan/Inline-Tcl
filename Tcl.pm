@@ -1,14 +1,17 @@
 package Inline::Tcl;
 
 use strict;
-use Carp;
+$Inline::Tcl::VERSION = '0.09';
+
 require Inline;
 require DynaLoader;
 require Exporter;
 
+use Carp;
+use Data::Dumper;
+
 use vars qw(@ISA $VERSION @EXPORT_OK);
-@ISA = qw(Inline DynaLoader Exporter);
-$VERSION = '0.08';
+@Inline::Tcl::ISA = qw(Inline DynaLoader Exporter);
 
 @EXPORT_OK = qw(eval_tcl);
 
@@ -16,7 +19,7 @@ $VERSION = '0.08';
 # Load (and initialize) the Tcl Interpreter
 #==============================================================================
 sub dl_load_flags { 0x01 }
-Inline::Tcl->bootstrap($VERSION);
+Inline::Tcl->bootstrap($Inline::Tcl::VERSION);
 
 #==============================================================================
 # Allow 'use Inline::Tcl qw(eval_tcl)'
@@ -29,8 +32,6 @@ sub import {
 # Provide an overridden function for evaluating Tcl code
 #==============================================================================
 sub eval_tcl {
-  #croak "Invalid use of eval_tcl()." .
-  #  " See 'perldoc Inline::Tcl' for details";
   if (scalar @_ == 1) {
     return _eval_tcl(@_);
   }
@@ -154,9 +155,7 @@ sub info {
 sub build {
     my $o = shift;
     return if $o->{Tcl}{built};
-    #print "Build\n";
-    #print "SEP: (@{$o->{Tcl}{PRIVATE_PREFIXES}})\n";
-    my $result = _eval_tcl($o->{code});
+    my $result = _eval_tcl($o->{API}{code});
     croak "Couldn't parse your Tcl code.\n" 
       unless $result;
 
@@ -183,9 +182,13 @@ sub build {
     my $namespace = Data::Dumper::Dumper(\%namespace);
 
     # if all was successful
-    $o->mkpath("$o->{install_lib}/auto/$o->{modpname}");
+    $o->mkpath("$o->{API}{install_lib}/auto/$o->{API}{modpname}");
 
-    open TCLDAT, "> $o->{location}" or
+    #$o->{Tcl}{location} = "$o->{API}{install_lib}/auto/$o->{API}{modpname}/$o->{API}{modfname}.$o->{API}{suffix}";
+    #print Dumper $o;
+    $o->mkpath( "$o->{API}{install_lib}/auto/$o->{API}{modpname}" );
+    
+    open TCLDAT, "> $o->{API}{location}" or
       croak "Inline::Tcl couldn't write parse information!";
     print TCLDAT <<END;
 %namespace = %{$namespace};
@@ -203,7 +206,7 @@ sub load {
     #print "LOAD\n";
     my $o = shift;
     return if $o->{Tcl}{loaded};
-    open TCLDAT, $o->{location} or 
+    open TCLDAT, $o->{API}{location} or 
       croak "Couldn't open parse info!";
     my $tcldat = join '', <TCLDAT>;
     close TCLDAT;
@@ -214,17 +217,17 @@ no strict;
 $tcldat
 END
 
-    croak "Unable to parse $o->{location}\n$@\n" if $@;
+    croak "Unable to parse $o->{API}{location}\n$@\n" if $@;
 
     $o->{Tcl}{namespace} = \%Inline::Tcl::namespace::namespace;
     delete $main::{Inline::Tcl::namespace::};
     $o->{Tcl}{loaded}++;
 
-    my $result = _eval_tcl($o->{code});
+    my $result = _eval_tcl($o->{API}{code});
 
     # bind some perl functions to the caller's namespace
     for my $function (@{$o->{Tcl}{namespace}{functions}}) {
-      my $s = "*::" . "$o->{pkg}";
+      my $s = "*::" . "$o->{API}{pkg}";
       $s .= "::$function = sub { ";
       $s .= "Inline::Tcl::_eval_tcl_function";
       $s .= "(__PACKAGE__,\"$function\", \@_) }";
