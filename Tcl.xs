@@ -35,7 +35,7 @@ SV* Tcl2Pl (char *result, char *perl_class) {
     * o If obj is a Dictionary, we convert it to an HV.
     */
     SV *s2;
-    PDEBUGG("Tcl2Pl: %s:%s\n", perl_class, result);
+    PDEBUG("Tcl2Pl: %s:%s\n", perl_class, result);
     s2 = newSVpv(result,0);
     return s2;
 }
@@ -48,7 +48,7 @@ SV* Tcl2Pl (char *result, char *perl_class) {
 char *Pl2Tcl (SV *obj) {
    char *str;
    str = (char *)SvPV(obj, PL_na);
-   PDEBUGG("Pl2Tcl: %s\n", str);
+   PDEBUG("Pl2Tcl: %s\n", str);
    return str;	
 }
 
@@ -89,14 +89,14 @@ _Inline_parse_tcl_namespace()
 	PERROR("Namespace: List Length error\n");
     }
 
-    PDEBUGG("OBJ %d\n", objc);
+    PDEBUG("OBJ %d\n", objc);
 
     for (i=0;i<objc;i++) {
 	if (TCL_ERROR == Tcl_ListObjIndex(interp, listPtr, i, &elemObjPtr)){
 	    PERROR("Namespace: List Length error\n");
         }
 	result = Tcl_GetString(elemObjPtr); /* error check ? */
-	PDEBUGG("RESULT = %s\n", result);
+	PDEBUG("RESULT = %s\n", result);
         av_push(functions, newSVpv(result,0));
     }
 
@@ -109,7 +109,7 @@ _eval_tcl(x)
     PREINIT:
 	int result;
     CODE:
-	PDEBUGG("EVAL: %s\n",x);
+	PDEBUG("EVAL: %s\n",x);
 	result = Tcl_Eval(interp,x);
 	RETVAL = (result == TCL_OK);
     OUTPUT:
@@ -128,7 +128,7 @@ _eval_tcl_function(PKG, FNAME...)
   int len;
   PPCODE:
 
-  PDEBUGG("function: %s:%s\n", PKG, FNAME);
+  PDEBUG("function: %s:%s\n", PKG, FNAME);
 
   cmdlen = 0;
 
@@ -147,15 +147,15 @@ _eval_tcl_function(PKG, FNAME...)
 	XSRETURN_EMPTY;
   }
   for (i=1; i<items; i++) {
-      PDEBUGG("ARG %d: %s\n", i, Pl2Tcl(ST(i)));
+      PDEBUG("ARG %d: %s\n", i, Pl2Tcl(ST(i)));
       strcat(command, Pl2Tcl(ST(i)));
       strcat(command, " ");
   }
 
   Tcl_Eval(interp, command);
   result = Tcl_GetStringResult(interp);
-  PDEBUGG("RESULT: %s\n", result);
-  PDEBUGG("FUNC: return from %s\n", FNAME);
+  PDEBUG("RESULT: %s\n", result);
+  PDEBUG("FUNC: return from %s\n", FNAME);
   ret = Tcl2Pl(result, PKG);
 
   free(command);

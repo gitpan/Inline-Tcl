@@ -5,11 +5,13 @@ use ExtUtils::MakeMaker;
 #============================================================================
 use Config;
 $version = $Config{version};
+#my $version = $];
+#print $version,"\n";
 
 #============================================================================
 # TCL libraries to look for
 #============================================================================
-my @tcl_libs = 
+my @py_libs = 
   (
    '/usr/local/lib/libtcl8.4.so',
    '/usr/lib/libtcl8.3.so',
@@ -23,7 +25,7 @@ my @tcl_libs =
 #============================================================================
 # TCL include files to look for
 #============================================================================
-my @tcl_incs = 
+my @py_incs = 
   (
    '/usr/tcl84/include/',
    '/usr/tcl83/include/',
@@ -36,18 +38,18 @@ my @tcl_incs =
 #============================================================================
 # Search for libraries
 #============================================================================
-my @tcl_libs_found;
-for my $loc (@tcl_libs) {
-    push(@tcl_libs_found, $loc) if -f $loc;
+my @py_libs_found;
+for my $loc (@py_libs) {
+    push(@py_libs_found, $loc) if -f $loc;
 }
 
 #============================================================================
 # Search for include directories
 #============================================================================
-my @tcl_incs_found;
-for my $loc (@tcl_incs) {
-#    push(@tcl_incs_found, $loc) if -d $loc;
-    push(@tcl_incs_found, $loc) if -f $loc."tcl.h";
+my @py_incs_found;
+for my $loc (@py_incs) {
+#    push(@py_incs_found, $loc) if -d $loc;
+    push(@py_incs_found, $loc) if -f $loc."tcl.h";
 }
 
 #============================================================================
@@ -55,24 +57,24 @@ for my $loc (@tcl_incs) {
 #============================================================================
 my $num = 1;
 my $lib = prompt(join("\n",("Found these TCL libraries: ",
-			    map {$num++ . ". $_"} @tcl_libs_found))."\nUse? (or enter alternative)",
-		 "1") if @tcl_libs_found;
+			    map {$num++ . ". $_"} @py_libs_found))."\nUse? (or enter alternative)",
+		 "1") if @py_libs_found;
 $lib = prompt ("Please enter the TCL library.", "")
-  unless @tcl_libs_found;
+  unless @py_libs_found;
 
-$lib = $tcl_libs_found[$lib-1] if $lib =~ /^\d+$/;
+$lib = $py_libs_found[$lib-1] if $lib =~ /^\d+$/;
 
 #============================================================================
 # Prompt for include directory to use
 #============================================================================
 $num = 1;
 my $inc = prompt(join("\n",("Found these TCL include dirs: ",
-			    map {$num++ . ". $_"} @tcl_incs_found))."\nUse? (or enter alternative)",
-		 "1") if @tcl_incs_found;
+			    map {$num++ . ". $_"} @py_incs_found))."\nUse? (or enter alternative)",
+		 "1") if @py_incs_found;
 $inc = prompt ("Please enter the TCL include directory.", "")
-  unless @tcl_incs_found;
+  unless @py_incs_found;
 
-$inc = $tcl_incs_found[$inc-1] if $inc =~ /^\d+$/;
+$inc = $py_incs_found[$inc-1] if $inc =~ /^\d+$/;
 
 
 my $lib_path = substr($lib,0,rindex($lib,'/'));
@@ -94,6 +96,7 @@ print "Tcl library path = $lib_path\n";
 print "Tcl include options = -Wall -l$lib\n";
 print "Tcl link options = $path_str -l$lib\n";
 
+
 #============================================================================
 # Write the makefile
 #============================================================================
@@ -104,7 +107,7 @@ WriteMakefile(
 	      NAME => 'Inline::Tcl',
 	      VERSION_FROM => 'Tcl.pm',
 	      PREREQ_PM => {
-			    Inline => 0.40,
+			    Inline => 0.31,
 			   },
 	      clean => {FILES => 'blib_test/'},
 	     );
