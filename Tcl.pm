@@ -8,7 +8,7 @@ require Exporter;
 
 use vars qw(@ISA $VERSION @EXPORT_OK);
 @ISA = qw(Inline DynaLoader Exporter);
-$VERSION = '0.05';
+$VERSION = '0.08';
 
 @EXPORT_OK = qw(eval_tcl);
 
