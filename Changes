@@ -12,4 +12,4 @@
        Checks in include paths for valid tcl headers
        Tested on FreeBSD and Linux
        
-       
+0.06:  Made compatible with Inline-0.40       

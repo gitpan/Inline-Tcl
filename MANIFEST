@@ -1,12 +1,14 @@
 MANIFEST
 Changes
+Bugs
 Makefile.PL
 Tcl.pm
 Tcl.pod
 Tcl.xs
 mydebug.h
 README
-t/aaa.t
-t/bbb.t
+t/00init.t
+t/01aaa.t
+t/02bbb.t
 t/a1.pl
 test.sh
